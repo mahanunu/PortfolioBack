@@ -8,38 +8,64 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Get(),
+        new Post(security: "is_granted('ROLE_ADMIN')"),
+        new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
+    ],
+    normalizationContext: ['groups' => ['read']],
+    denormalizationContext: ['groups' => ['write']],
+    forceEager: false
+)]
 class Project
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups('read')]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['read', 'write'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['read', 'write'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['read', 'write'])]
     private ?string $imageUrl = null;
 
     #[ORM\Column]
+     #[Groups(['read', 'write'])]
     private ?bool $isPublished = null;
 
     #[ORM\Column(length: 255)]
+     #[Groups(['read', 'write'])]
     private ?string $projectUrl = null;
 
     #[ORM\Column]
+     #[Groups(['read', 'write'])]
     private ?\DateTime $createdAt = null;
 
     #[ORM\Column]
+     #[Groups(['read', 'write'])]
     private ?\DateTime $updatedAt = null;
 
     #[ORM\Column(length: 255)]
+     #[Groups(['read', 'write'])]
     private ?string $year = null;
 
     /**
@@ -51,7 +77,7 @@ class Project
     /**
      * @var Collection<int, technology>
      */
-    #[ORM\ManyToMany(targetEntity: technology::class, inversedBy: 'projects')]
+    #[ORM\ManyToMany(targetEntity: Technology::class, inversedBy: 'projects')]
     private Collection $technologies;
 
     #[ORM\ManyToOne(inversedBy: 'projects')]
