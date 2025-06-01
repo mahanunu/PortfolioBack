@@ -13,27 +13,34 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-        main:
-            lazy: true
-            provider: app_user_provider
+        login: # Ajout d'un pare-feu pour la route de login, si elle n'est pas couverte par main ou api
+            pattern:  ^/api/auth
             stateless: true
             json_login:
-                check_path: auth # Nom de la route dans routes.yaml
+                check_path: /api/auth # Doit correspondre à la route définie dans routes.yaml
                 username_path: email
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+        api: # Pare-feu pour les routes API protégées par JWT
+            pattern:   ^/api
+            stateless: true
             jwt: ~
+        main: # Garder un pare-feu main peut être utile, mais il ne gérera plus l'authentification principale ici
+            lazy: true
+            provider: app_user_provider # Peut-être pas nécessaire si tout /api est couvert par le pare-feu api
+            # Commentez ou supprimez form_login et logout si vous passez entièrement à JWT pour ces fonctionnalités
+            # form_login:
+            #     login_path: app_login
+            #     check_path: app_login
+            #     enable_csrf: true
+            # logout:
+            #     path: app_logout
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
-
-    # Easy way to control access for large sections of your site
-    # Note: Only the *first* access control that matches will be used
     access_control:
+        - { path: ^/api/auth, roles: PUBLIC_ACCESS }
+        - { path: ^/api/users, methods: [POST], roles: PUBLIC_ACCESS }
+        - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 
