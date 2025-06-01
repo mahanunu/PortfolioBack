@@ -25,7 +25,7 @@ use App\State\UserPasswordHasherProcessor;
 #[ApiResource(
     operations: [
         new GetCollection(security: "is_granted('ROLE_ADMIN')"),
-        new Post(processor: UserPasswordHasherProcessor::class),
+        new Post(processor: UserPasswordHasherProcessor::class, security: "is_granted('PUBLIC_ACCESS')"),
         new Get(security: "is_granted('ROLE_ADMIN') OR user === object"),
         new Patch(processor: UserPasswordHasherProcessor::class, security: "is_granted('ROLE_ADMIN') OR user === object"),
         new Delete(security: "is_granted('ROLE_ADMIN')"),
@@ -65,11 +65,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotBlank]
     private ?string $plainPassword = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['read', 'write'])]
     private ?string $firstName = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['read', 'write'])]
     private ?string $lastName = null;
 
@@ -90,6 +90,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __construct()
     {
         $this->projects = new ArrayCollection();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     public function getId(): ?int
@@ -212,6 +214,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAtValue(): void
+    {
+        $this->updatedAt = new \DateTime();
+    }
+
     public function getPlainPassword(): ?string
     {
         return $this->plainPassword;
