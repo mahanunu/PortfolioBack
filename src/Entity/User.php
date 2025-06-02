@@ -92,6 +92,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->projects = new ArrayCollection();
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
+        $this->roles = ['PUBLIC_ACCESS'];
     }
 
     public function getId(): ?int
