@@ -39,4 +39,16 @@ class SecurityController extends AbstractController
         $token = $tokenManager->getToken('authenticate')->getValue();
         return $this->json(['csrf_token' => $token]);
     }
+
+    public function preflightAuth(): Response
+    {
+        $response = new Response();
+        $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:3000');
+        $response->headers->set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
+        $response->headers->set('Access-Control-Max-Age', '3600');
+        
+        return $response;
+    }
 } 

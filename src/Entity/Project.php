@@ -19,7 +19,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ApiResource(
     operations: [
         new GetCollection(),
-        new Get(),
+        new Get(security: "is_granted('ROLE_ADMIN') or object.isIsViewable() == true"),
         new Post(security: "is_granted('ROLE_ADMIN')"),
         new Patch(security: "is_granted('ROLE_ADMIN')"),
         new Delete(security: "is_granted('ROLE_ADMIN')"),
@@ -56,17 +56,21 @@ class Project
      #[Groups(['read', 'write'])]
     private ?string $projectUrl = null;
 
-    #[ORM\Column]
-     #[Groups(['read', 'write'])]
-    private ?\DateTime $createdAt = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: false)]
+    #[Groups(['read'])]
+    private \DateTimeInterface $createdAt;
 
-    #[ORM\Column]
-     #[Groups(['read', 'write'])]
-    private ?\DateTime $updatedAt = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: false)]
+    #[Groups(['read'])]
+    private \DateTimeInterface $updatedAt;
 
     #[ORM\Column(length: 255)]
      #[Groups(['read', 'write'])]
     private ?string $year = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    #[Groups(['read', 'write'])]
+    private bool $isViewable = true;
 
     /**
      * @var Collection<int, Student>
@@ -87,6 +91,21 @@ class Project
     {
         $this->students = new ArrayCollection();
         $this->technologies = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    #[ORM\PrePersist]
+    public function setCreatedAtValue(): void
+    {
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAtValue(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -154,28 +173,14 @@ class Project
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTime
+    public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTime $createdAt): static
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): ?\DateTime
+    public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(\DateTime $updatedAt): static
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
     }
 
     public function getYear(): ?string
@@ -246,6 +251,18 @@ class Project
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    public function isIsViewable(): bool
+    {
+        return $this->isViewable;
+    }
+
+    public function setIsViewable(bool $isViewable): static
+    {
+        $this->isViewable = $isViewable;
 
         return $this;
     }
